@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Communication Quest v0.4.4</title>
+<title>Communication Quest v0.4.5</title>
 <style>
 :root{--navy:#102f49;--ink:#173149;--muted:#657886;--line:#d9e4eb;--bg:#f3f7fa;--gold:#f0b33f;--purple:#733c9f;--teal:#168e97;--green:#2e8b62;}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input{font:inherit}button{cursor:pointer}
@@ -32,7 +32,7 @@
 @media print{body{background:#fff}.app>*{display:none!important}#finishScreen{display:block!important}.finishGrid{display:block!important}.coach{page-break-before:always;margin-top:0}.card{box-shadow:none;border:0}.btn,.controls{display:none!important}}
 </style></head>
 <body><div class="app">
-<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.4</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
+<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.5</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
 
 <section id="startScreen" class="screen on"><div class="startGrid">
 <div class="hero"><div><h1>Communication Quest</h1><p>Travel from résumé to interview to your first day on the job. Make communication decisions, learn from Rosie, and build career-ready communication habits.</p></div></div>
@@ -68,7 +68,7 @@ let s={name:'',pos:0,pts:0,audio:false,cc:true,done:{resume:[],interview:[],work
 const $=x=>document.getElementById(x), syn=('speechSynthesis'in window)?speechSynthesis:null;
 function spokenText(t){
  return String(t)
-  .replace(/résumé/gi,'rez-oo-may')
+  .replace(/résumé/gi,'rez oo MAY')
   .replace(/\bSAR\b/g,'S A R');
 }
 function speak(t,force=false,target='cap'){
@@ -134,8 +134,12 @@ function parseVtt(txt){
 async function playMedia(audioSrc,vttSrc,fallbackText='',force=false,target='cap'){
  stopMedia(); mediaCaptionTarget=target;
  if(!s.audio&&!force)return;
- try{captionCues=vttSrc?parseVtt(await fetch(vttSrc).then(r=>r.text())):[]}catch(e){captionCues=[]}
+
+ // Start the audio immediately while we are still inside the user's interaction.
+ // This avoids browser autoplay blocking caused by waiting for the VTT fetch first.
  mediaAudio.src=audioSrc;
+ captionCues=[];
+
  mediaAudio.ontimeupdate=()=>{
   let el=$(mediaCaptionTarget);if(!el)return;
   if(!s.cc){hideCaption(mediaCaptionTarget);return}
@@ -145,7 +149,16 @@ async function playMedia(audioSrc,vttSrc,fallbackText='',force=false,target='cap
   else hideCaption(mediaCaptionTarget)
  };
  mediaAudio.onended=()=>hideCaption(mediaCaptionTarget);
+
  try{await mediaAudio.play()}catch(e){}
+
+ // Load captions after playback has already begun.
+ if(vttSrc){
+  fetch(vttSrc)
+   .then(r=>r.ok?r.text():'')
+   .then(txt=>{captionCues=txt?parseVtt(txt):[]})
+   .catch(()=>{captionCues=[]});
+ }
 }
 function rosieMedia(q){
  let key=q.id.replace(/^r/,'resume-').replace(/^i/,'interview-').replace(/^w/,'work-');
@@ -183,7 +196,11 @@ function simple(z,tag,title,text,rosieText='',rosieType='tip',audioSrc='',vttSrc
  hideCaption('cap');
  if(rosieText)showCoachRosie(rosieType,rosieText);
  $('mbg').classList.add('show');
- if(audioSrc)playMedia(audioSrc,vttSrc,text,false,'cap'); else if(s.audio)speak(rosieText||text,false,'cap')
+ if(audioSrc){
+  playMedia(audioSrc,vttSrc,text,false,'cap');
+ }else if(s.audio){
+  speak(rosieText||text,false,'cap');
+ }
 }
 function scenario(z){
  hideCheckpointCard();$('cont').textContent='Continue';
