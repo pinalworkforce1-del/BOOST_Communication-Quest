@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Communication Quest v0.4.6 Rosie Voice</title>
+<title>Communication Quest v0.4.7 Rosie Feedback Fix</title>
 <style>
 :root{--navy:#102f49;--ink:#173149;--muted:#657886;--line:#d9e4eb;--bg:#f3f7fa;--gold:#f0b33f;--purple:#733c9f;--teal:#168e97;--green:#2e8b62;}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input{font:inherit}button{cursor:pointer}
@@ -32,7 +32,7 @@
 @media print{body{background:#fff}.app>*{display:none!important}#finishScreen{display:block!important}.finishGrid{display:block!important}.coach{page-break-before:always;margin-top:0}.card{box-shadow:none;border:0}.btn,.controls{display:none!important}}
 </style></head>
 <body><div class="app">
-<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.6 Rosie Voice</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
+<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.7 Rosie Feedback Fix</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
 
 <section id="startScreen" class="screen on"><div class="startGrid">
 <div class="hero"><div><h1>Communication Quest</h1><p>Travel from résumé to interview to your first day on the job. Make communication decisions, learn from Rosie, and build career-ready communication habits.</p></div></div>
@@ -161,7 +161,9 @@ async function playMedia(audioSrc,vttSrc,fallbackText='',force=false,target='cap
  }
 }
 function rosieMedia(q){
- let key=q.id.replace(/^r/,'resume-').replace(/^i/,'interview-').replace(/^w/,'work-');
+ let zone=q.id[0]==='r'?'resume':q.id[0]==='i'?'interview':'work';
+ let num=String(parseInt(q.id.slice(1),10)).padStart(2,'0');
+ let key=zone+'-'+num;
  return ['assets/audio/rosie-'+key+'.mp3','assets/captions/rosie-'+key+'.vtt']
 }
 function loadArtwork(q){
