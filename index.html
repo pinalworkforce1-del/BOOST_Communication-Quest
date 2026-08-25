@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Communication Quest v0.4.5</title>
+<title>Communication Quest v0.4.6 Rosie Voice</title>
 <style>
 :root{--navy:#102f49;--ink:#173149;--muted:#657886;--line:#d9e4eb;--bg:#f3f7fa;--gold:#f0b33f;--purple:#733c9f;--teal:#168e97;--green:#2e8b62;}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input{font:inherit}button{cursor:pointer}
@@ -32,7 +32,7 @@
 @media print{body{background:#fff}.app>*{display:none!important}#finishScreen{display:block!important}.finishGrid{display:block!important}.coach{page-break-before:always;margin-top:0}.card{box-shadow:none;border:0}.btn,.controls{display:none!important}}
 </style></head>
 <body><div class="app">
-<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.5</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
+<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.6 Rosie Voice</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
 
 <section id="startScreen" class="screen on"><div class="startGrid">
 <div class="hero"><div><h1>Communication Quest</h1><p>Travel from résumé to interview to your first day on the job. Make communication decisions, learn from Rosie, and build career-ready communication habits.</p></div></div>
@@ -185,6 +185,7 @@ function checkpointIntro(z){
  $('checkpointCard').classList.add('show');
  $('cont').textContent=remaining?'Complete Remaining '+remaining+' →':'Continue →';$('cont').classList.remove('hidden');
  $('mbg').classList.add('show');
+ if(s.audio)playMedia('assets/audio/checkpoint-reached.mp3','assets/captions/checkpoint-reached.vtt','Checkpoint reached. Before we move on, let\'s make sure you\'ve hit every communication challenge in this stage.',false,'cap');
 }
 
 function simple(z,tag,title,text,rosieText='',rosieType='tip',audioSrc='',vttSrc=''){
@@ -239,12 +240,12 @@ function completeCheckpoint(z){
  checkpointActive=false;checkpointZone=null;
  if(z==='resume'){
   stageTransitionPending=true;
-  simple(z,'STAGE COMPLETE','You Got Noticed!','You completed all five Résumé & Application communication challenges. Now it is time to make the connection.','Your résumé opened the door. Now it is time to communicate your value in person.','boost','assets/audio/transition-interview.mp3','assets/captions/transition-interview.vtt')
+  simple(z,'STAGE COMPLETE','You Got Noticed!','You completed all five Résumé & Application communication challenges. Now it is time to make the connection.','You got noticed. Your résumé opened the door. Now it is time to make the connection and communicate your value in person.','boost','assets/audio/transition-interview.mp3','assets/captions/transition-interview.vtt')
  }else if(z==='interview'){
   stageTransitionPending=true;
-  simple(z,'STAGE COMPLETE','You Made the Connection!','You completed all five Interview communication challenges. Now it is time to make your mark at work.','You made the connection. Now the communication skills that helped you get hired become the skills that help you succeed at work.','boost')
+  simple(z,'STAGE COMPLETE','You Made the Connection!','You completed all five Interview communication challenges. Now it is time to make your mark at work.','You made the connection. Now the communication skills that helped you get hired become the skills that help you succeed at work.','boost','assets/audio/transition-workplace.mp3','')
  }else{
-  simple(z,'CHECKPOINT UNLOCKED','Make Your Mark Complete','You completed all five First Day & Workplace communication challenges. The finish is now unlocked!','You are ready for the finish.','boost')
+  simple(z,'CHECKPOINT UNLOCKED','Make Your Mark Complete','You completed all five First Day & Workplace communication challenges. The finish is now unlocked!','You completed all five First Day and Workplace communication challenges. The finish is unlocked. You\'re ready for the finish.','boost','assets/audio/workplace-checkpoint-complete.mp3','assets/captions/workplace-checkpoint-complete.vtt')
  }
 }
 function closem(){
@@ -263,10 +264,12 @@ function land(){
  setTimeout(()=>{
   $('banner').classList.remove('show');$('sp'+s.pos).classList.remove('hit');
   if(type==='scenario')scenario(z);
-  else if(type==='tip')simple(z,"ROSIE'S TIP",'Quick Coaching Moment',
-   z==='resume'?'Strong résumé communication is focused, relevant, and truthful.':z==='interview'?'Strong interview communication combines listening, examples, and natural body language.':'Strong workplace communication means asking, clarifying, and keeping people informed.',
-   'Keep it clear, keep it professional, and make it easy for the other person to understand what you need them to know.','tip');
-  else if(type==='boost')simple(z,"ROSIE'S BOOST",'Nice Move!','You found a Communication Boost space. Your score still comes only from the 15 required scenarios.','Confidence is useful when it is backed by clear, respectful communication.','boost');
+  else if(type==='tip'){
+   let tipKey=z==='resume'?'rosie-tip-resume':z==='interview'?'rosie-tip-interview':'rosie-tip-work';
+   let tipText=z==='resume'?'Strong résumé communication is focused, relevant, and truthful. Keep it clear, keep it professional, and make it easy for the employer to understand what you bring.':z==='interview'?'Strong interview communication combines listening, specific examples, and natural body language. Keep it clear, keep it professional, and make it easy for the other person to connect with you.':'Strong workplace communication means asking, clarifying, and keeping people informed. Keep it clear, keep it professional, and make it easy for the other person to understand what you need them to know.';
+   simple(z,"ROSIE'S TIP",'Quick Coaching Moment',tipText,tipText,'tip','assets/audio/'+tipKey+'.mp3','assets/captions/'+tipKey+'.vtt');
+  }
+  else if(type==='boost')simple(z,"ROSIE'S BOOST",'Nice Move!','You found a Communication Boost space. Your score still comes only from the 15 required scenarios.','Nice move. Confidence is useful when it is backed by clear, respectful communication.','boost','assets/audio/rosie-boost-generic.mp3','assets/captions/rosie-boost-generic.vtt');
   else if(type==='checkpoint')runCheckpoint(z);
   else if(type==='finish')finish()
  },1250)
@@ -302,7 +305,7 @@ function spin(){
   let raw=Math.min(spaces.length-1,s.pos+v),block=nextBlockingCheckpoint(s.pos,raw),t=block??raw;
   $('next').textContent=(block?'Checkpoint ahead — stopping on: ':'You will land on: ')+spaces[t].label;
   $('result').classList.add('show');
-  if(s.audio)speak('You spun '+v+'. Move '+v+' spaces.');
+  if(s.audio)playMedia('assets/audio/spin-'+v+'.mp3','assets/captions/spin-'+v+'.vtt','You spun '+v+'. Move '+v+' space'+(v===1?'':'s')+'.',false,'gameCap');
   setTimeout(async()=>{await move(v);s.spin=false;$('spin').disabled=false},950)
  },3150)
 }
@@ -328,14 +331,14 @@ function finish(){
  screen('finishScreen');
  if(s.audio){
   // Finish audio is intentionally allowed to autoplay because the user enabled Audio.
-  playMedia('assets/audio/finish.mp3','assets/captions/finish.vtt','Congratulations. You completed Communication Quest.',false,'gameCap')
+  playMedia('assets/audio/game-finish.mp3','assets/captions/game-finish.vtt','Congratulations. You completed Communication Quest.',false,'gameCap')
  }
 }
 
 $('begin').onclick=()=>{
  let n=$('name').value.trim();if(!n){$('name').focus();return}
  s.name=n;ui();screen('gameScreen');$('journey').textContent='Spin the wheel to begin, '+n+'.';
- if(s.audio)playMedia('assets/audio/intro.mp3','assets/captions/intro.vtt','Welcome to Communication Quest.',false,'gameCap')
+ if(s.audio)playMedia('assets/audio/game-intro.mp3','assets/captions/game-intro.vtt','Welcome to Communication Quest.',false,'gameCap')
 };
 $('spin').onclick=spin;
 $('cont').onclick=closem;
@@ -349,7 +352,7 @@ $('read').onclick=()=>{
   if(s.cur&&s.cur.simple&&text)speak(text,true)
  }
 };
-$('hear').onclick=()=>speak($('rules').textContent,true);
+$('hear').onclick=()=>playMedia('assets/audio/game-rules.mp3','assets/captions/game-rules.vtt',$('rules').textContent,true,'cap');
 $('as').onclick=()=>audio(!s.audio);$('ag').onclick=()=>audio(!s.audio);
 $('cs').onclick=()=>captions(!s.cc);$('cg').onclick=()=>captions(!s.cc);
 $('print').onclick=()=>window.print();$('restart').onclick=()=>location.reload();
