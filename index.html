@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Communication Quest v0.4.7 Rosie Feedback Fix</title>
+<title>Communication Quest v0.4.9 Wheel Click</title>
 <style>
 :root{--navy:#102f49;--ink:#173149;--muted:#657886;--line:#d9e4eb;--bg:#f3f7fa;--gold:#f0b33f;--purple:#733c9f;--teal:#168e97;--green:#2e8b62;}
 *{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:var(--bg);color:var(--ink)}button,input{font:inherit}button{cursor:pointer}
@@ -30,9 +30,15 @@
 .finishGrid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.cert{background:#fff;border:10px double var(--navy);padding:28px;text-align:center;min-height:500px;display:flex;flex-direction:column;justify-content:center}.certname{font-size:2rem;font-weight:950;color:#1c6f98;margin:10px}.certLogo{display:block;width:min(440px,82%);height:auto;object-fit:contain;margin:0 auto 18px}.certBrand{font-weight:900;color:#1c6f98;letter-spacing:.05em}table{width:100%;border-collapse:collapse}td,th{padding:9px;border-bottom:1px solid var(--line);text-align:left}.skills{display:flex;gap:6px;flex-wrap:wrap}.skill{background:#eef5f8;border-radius:999px;padding:6px 9px;font-size:.82rem;font-weight:800}.hidden{display:none!important}
 @media(max-width:950px){.gameGrid{grid-template-columns:1fr}.side{grid-template-columns:1fr 1fr}.startGrid,.finishGrid{grid-template-columns:1fr}}@media(max-width:620px){.side{grid-template-columns:1fr}.app{padding:6px}.rosie{grid-template-columns:82px 1fr}.rosieArt{width:74px;height:74px}}
 @media print{body{background:#fff}.app>*{display:none!important}#finishScreen{display:block!important}.finishGrid{display:block!important}.coach{page-break-before:always;margin-top:0}.card{box-shadow:none;border:0}.btn,.controls{display:none!important}}
+
+.answerTag{display:inline-block;margin-right:8px;padding:3px 8px;border-radius:999px;font-size:.72rem;font-weight:900;letter-spacing:.02em;vertical-align:middle}
+.answerTag.bestTag{background:#177245;color:#fff}
+.answerTag.chosenTag{background:#b7791f;color:#fff}
+.answerTag.weakTag{background:#a33a3a;color:#fff}
+
 </style></head>
 <body><div class="app">
-<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.7 Rosie Feedback Fix</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
+<div class="top"><div class="brand">Communication Quest <span style="color:#6d7f8b;font-weight:600">v0.4.9 Wheel Click</span></div><div class="stats"><span id="pname" class="pill">Player</span><span id="pr" class="pill gold">Résumé 0/5</span><span id="pi" class="pill purple">Interview 0/5</span><span id="pw" class="pill teal">Workplace 0/5</span><span id="pts" class="pill">⭐ 0/45</span></div></div>
 
 <section id="startScreen" class="screen on"><div class="startGrid">
 <div class="hero"><div><h1>Communication Quest</h1><p>Travel from résumé to interview to your first day on the job. Make communication decisions, learn from Rosie, and build career-ready communication habits.</p></div></div>
@@ -220,9 +226,24 @@ function scenario(z){
 function answer(i,b){
  let {z,q}=s.cur;if(s.done[z].includes(q.id))return;
  let a=q.choices[i];
- [...$('answers').children].forEach(x=>x.disabled=true);
+ [...$('answers').children].forEach((x,j)=>{
+  x.disabled=true;
+  const choice=q.choices[j];
+  if(j===i) x.classList.add(choice.score===3?'best':choice.score===2?'ok':'weak');
+  if(choice.score===3){
+    x.classList.add('best');
+    const tag=document.createElement('span');
+    tag.className='answerTag bestTag';
+    tag.textContent=j===i?'YOUR RESPONSE · BEST RESPONSE ✓':'BEST RESPONSE ✓';
+    x.prepend(tag);
+  } else if(j===i){
+    const tag=document.createElement('span');
+    tag.className='answerTag '+(choice.score===2?'chosenTag':'weakTag');
+    tag.textContent='YOUR RESPONSE · '+(choice.score===2?'WORKABLE':'NEEDS WORK');
+    x.prepend(tag);
+  }
+ });
  s.done[z].push(q.id);s.scores[z]+=a.score;s.pts+=a.score;s.responses[q.id]={score:a.score,skill:q.skill};
- b.classList.add(a.score===3?'best':a.score===2?'ok':'weak');
  $('fb').innerHTML='<b>'+a.label+'</b><br>'+a.feedback+'<br><br><b>Communication principle:</b> '+q.principle;
  $('fb').classList.add('show');
  showRosie(q,a.score);
@@ -293,8 +314,44 @@ async function move(n){
  land()
 }
 
+
+let wheelAudioCtx=null;
+function wheelClick(){
+ if(!s.audio)return;
+ try{
+   wheelAudioCtx=wheelAudioCtx||new (window.AudioContext||window.webkitAudioContext)();
+   if(wheelAudioCtx.state==='suspended')wheelAudioCtx.resume();
+   const now=wheelAudioCtx.currentTime;
+   const osc=wheelAudioCtx.createOscillator();
+   const gain=wheelAudioCtx.createGain();
+   osc.type='square';
+   osc.frequency.setValueAtTime(1050,now);
+   osc.frequency.exponentialRampToValueAtTime(420,now+.018);
+   gain.gain.setValueAtTime(.055,now);
+   gain.gain.exponentialRampToValueAtTime(.001,now+.025);
+   osc.connect(gain);gain.connect(wheelAudioCtx.destination);
+   osc.start(now);osc.stop(now+.028);
+ }catch(e){}
+}
+function wheelRatchet(duration=3000){
+ if(!s.audio)return;
+ const start=performance.now();
+ function tick(){
+   if(!s.audio)return;
+   const elapsed=performance.now()-start;
+   if(elapsed>=duration)return;
+   wheelClick();
+   const progress=Math.min(1,elapsed/duration);
+   // Starts brisk and progressively opens up into distinct final clicks.
+   const delay=45 + Math.pow(progress,2.35)*245;
+   setTimeout(tick,delay);
+ }
+ tick();
+}
+
 function spin(){
- if(s.spin)return;s.spin=true;$('spin').disabled=true;$('result').classList.remove('show');
+ if(s.spin)return;s.spin=true;
+ wheelRatchet(3050);$('spin').disabled=true;$('result').classList.remove('show');
  let v=1+Math.floor(Math.random()*3);
  // Wedge centers: 1 = gold at 60°, 2 = purple at 180°, 3 = blue at 300°.
  // Rotate each center precisely to the 12 o'clock pointer.
